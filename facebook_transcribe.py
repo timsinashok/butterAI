@@ -54,7 +54,7 @@ def transcribe_audio_with_timestamps(audio_path):
     return ' | '.join(words_with_timestamps), full_transcription
 
 # # Example usage:
-# audio_path = "short_stutter.wav"  # Replace with your own audio path
+# audio_path = "manoj-s.wav"  # Replace with your own audio path
 # words_with_timestamps, full_transcription = transcribe_audio_with_timestamps(audio_path)
 
 # # Print the resultss
