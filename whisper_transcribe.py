@@ -14,8 +14,8 @@ def transcribe_audio(audio_path):
     # Return the transcription text
     return transcription
 
-## Example usage
-# audio_path = "john.wav"  # Replace with your MP3 file path
+# # Example usage
+# audio_path = "manoj-s.wav"  # Replace with your MP3 file path
 # transcription = transcribe_audio(audio_path)
 
 # # Print the transcription result
