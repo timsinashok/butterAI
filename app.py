@@ -81,39 +81,34 @@ def chat_groq(GROQ_API_KEY, temp_file_path):
     Timestamp: {timestamp}
     Stuttering Score: {stuttering_score}
     """)
-
     prompt = f"""
-    You are an AI speech therapist helping a user improve their speech.
+    You are an AI speech therapist helping a user improve their speech in a natural, supportive conversation.
 
-    ### **Speech Analysis**
-    - Unprocessed speech: {fb_text}
+    ### **Session Context**
+    {chat_history}
+
+    ### **Speech Data**
     - Processed speech: {whisper_text}
     - Speech with timestamps: {timestamp}
     - Fluency level (0-100, where 100 indicates more difficulty speaking): {stuttering_score}
 
     ### **Your Role**
-    Analyze the speech patterns and identify any difficulties such as repetition, prolongation, or blocks. Focus on **small, achievable improvements** with **gentle, positive guidance**. 
+    Engage in a **fluid, back-and-forth conversation** like a real speech therapist. Focus on **small, achievable improvements** with **gentle, positive guidance**. 
 
     ### **Guidance for Your Response**
-    - Offer **simple** and **clear** feedback.
-    - Suggest **one practical exercise** (a word, phrase, or sentence) based on the user's speech.
-    - Be **encouraging** and **motivating**.
-    - **Avoid technical terms** (e.g., "stuttering score" or "transcription").
-    - **Do not be verbose**. Keep responses **short, supportive, and to the point**.
-    - **The correct spellings are in processed speech, so refer to that when you are suggesting exercises. But do not refer to "processed speech" itself**
-    - **Do not refer to unprocessed speech**
-    - **Get straight to the point.**
-    - **It's a continuous conversation, do not start from scratch every time. Use the context of the previous conversation.**
-    - **If it's not the first connversation, do not use niceties like "I am excited to help you"**
-    - **End the text after you suggest an exercise. The user will respond with their attempt.**\
-    - **You have a upper limit of 2 sentences.**
-    - **Do not repeat the exercise from the earlier conversation.**
+    - Keep responses **natural, short, and engaging**—no robotic phrasing.
+    - Respond in a **conversational tone** (e.g., "Hey Alex, let's try this…").
+    - Offer **one practical exercise** per response, and the exercise should be about **one** specific word.
+    - Be **encouraging**, avoiding technical terms like "stuttering score" or "transcription."
+    - **No over-explaining.** Keep it to **2 sentences max** unless giving an example.
+    - **No repeating previous exercises**—build on past attempts naturally.
+    - **Avoid formal intros and conclusions.** Continue like an ongoing chat.
 
-    ### **Session Context**
-    {chat_history}
-
-    If any speech data is missing, assume it is the user's first session and provide **general encouragement and a simple starting exercise**.
+    If it's the user's first session, start with **gentle encouragement and a simple warm-up exercise.**
     """
+
+
+
 
     system_message = """You are an AI-powered speech therapist specializing in 
     helping people who stutter. Analyze the provided transcriptions, offer personalized constructive 
@@ -186,6 +181,40 @@ async def get_chat_history():
     except Exception as e:
         print(f"❌ Error retrieving chat history: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+count = 0
+score = 10
+# API endpoints
+@app.post("/butterask", response_model=GroqResponse)
+async def ask_groq(file: UploadFile = File(...)):
+    global count
+    global score
+    print('📁 Received audio file.')
+    
+    
+
+    therapist_dialogue = [
+        "Hey Alex, Let’s start with some easy breathing. Take a deep breath in… and let it out slowly. Good. Now, let’s try saying “Monday,” but we’ll stretch the first sound gently—like ‘Mooonday.’ Give it a try",
+        "Nice! Did that feel a little smoother?",
+        "Great! Now, let’s try it again, but even softer this time—no rush, just let the sound flow.",
+        "That was really smooth! This technique—stretching the first sound—can help words feel easier. Want to try with another word? Maybe “morning”?",
+        "Awesome! You’re doing great, Alex. The more we practice, the easier it’ll feel. Want to try one more?",
+        "Nailed it! See? You’re getting the hang of it. 😊"
+    ]
+    response = therapist_dialogue[count]
+    count  += 1
+    print("🗑️ Temporary file deleted.")
+
+    score = score + 20
+
+    print("🔊 Generating audio response...")
+    audio_stream = text_to_speech_audio(response)
+    audio_base64 = base64.b64encode(audio_stream.getvalue()).decode('utf-8')
+    print("✅ Audio response generated successfully.")
+
+    print('📤 Sending response to client.')
+    return JSONResponse(content={"text": response, "progress": score, "audio": audio_base64})
+
 
 # Main execution
 if __name__ == "__main__":
